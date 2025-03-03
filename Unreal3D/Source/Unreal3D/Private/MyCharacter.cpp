@@ -4,15 +4,8 @@
 #include "MyCharacter.h"
 
 #include "Kismet/KismetMathLibrary.h"
-#include "EnhancedInputComponent.h"
-#include "EnhancedInputSubsystems.h"
-#include "InputActionValue.h"
-
 #include "Components/CapsuleComponent.h"
 #include "Components/WidgetComponent.h"
-#include "GameFramework/SpringArmComponent.h"
-#include "Camera/CameraComponent.h"
-
 #include "Engine/DamageEvents.h"
 
 #include "MyAnimInstance.h"
@@ -26,15 +19,6 @@ AMyCharacter::AMyCharacter()
 	PrimaryActorTick.bCanEverTick = true;
 
 	GetMesh()->SetRelativeLocationAndRotation(FVector(0.0f, 0.0f, -88.0f), FRotator(0.0f, -90.0f, 0.0f));
-
-	_springArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArm"));
-	_camera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
-
-	_springArm->SetupAttachment(GetCapsuleComponent());
-	_camera->SetupAttachment(_springArm);
-
-	_springArm->TargetArmLength = 500.0f;
-	_springArm->SetRelativeRotation(FRotator(-35.0f, 0.0f, 0.0f));
 
 	_statComponent = CreateDefaultSubobject<UMyStatComponent>(TEXT("Stat"));
 
@@ -59,7 +43,6 @@ void AMyCharacter::BeginPlay()
 		UE_LOG(LogTemp, Error, TEXT("AnimInstance did not exist."));
 
 	_animInstance->OnMontageEnded.AddDynamic(this, &AMyCharacter::AttackEnd);
-	_animInstance->OnMontageBlendingOut.AddDynamic(this, &AMyCharacter::AttackEnd);
 	_animInstance->_hitEvent.AddDynamic(this, &AMyCharacter::Attack_Hit);
 
 	auto hpBar = Cast<UMyHpBar>(_hpBarWidget->GetWidget());
@@ -96,75 +79,15 @@ void AMyCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
-	UEnhancedInputComponent* enhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent);
-	if (enhancedInputComponent)
-	{
-		enhancedInputComponent->BindAction(_moveAction, ETriggerEvent::Triggered, this, &AMyCharacter::Move);
-		enhancedInputComponent->BindAction(_lookAction, ETriggerEvent::Triggered, this, &AMyCharacter::Look);
-		enhancedInputComponent->BindAction(_jumpAction, ETriggerEvent::Triggered, this, &AMyCharacter::MyJump);
-		enhancedInputComponent->BindAction(_attackAction, ETriggerEvent::Triggered, this, &AMyCharacter::Attack);
-	}
 }
 
-void AMyCharacter::Move(const FInputActionValue& value)
+void AMyCharacter::Attack()
 {
-	if (_isAttack) return;
+	_isAttack = true;
 
-	FVector2D moveVector = value.Get<FVector2D>();
-
-	if (Controller != nullptr)
-	{
-		if (moveVector.Length() > 0.01f)
-		{
-			FVector forward = GetActorForwardVector();
-			FVector right = GetActorRightVector();
-
-			_vertical = moveVector.Y;
-			_horizontal = moveVector.X;
-
-			AddMovementInput(forward, moveVector.Y);
-			AddMovementInput(right, moveVector.X);
-		}
-	}
-}
-
-void AMyCharacter::Look(const FInputActionValue& value)
-{
-	FVector2D lookAxisVector = value.Get<FVector2D>();
-
-	if (Controller != nullptr)
-	{
-		AddControllerYawInput(lookAxisVector.X);
-		AddControllerPitchInput(-lookAxisVector.Y);
-	}
-}
-
-void AMyCharacter::MyJump(const FInputActionValue& value)
-{
-	if (_isAttack) return;
-
-	bool isPress = value.Get<bool>();
-
-	if (isPress)
-	{
-		ACharacter::Jump();
-	}
-}
-
-void AMyCharacter::Attack(const FInputActionValue& value)
-{
-	if (_isAttack) return;
-
-	bool isPress = value.Get<bool>();
-
-	if (isPress)
-	{
-		_isAttack = true;
-
-		_curAttackSection = (_curAttackSection + 1) % 3;
-		_animInstance->PlayAnimMontage();
-		_animInstance->JumpToSection(_curAttackSection + 1);
-	}
+	_curAttackSection = (_curAttackSection + 1) % 3;
+	_animInstance->PlayAnimMontage();
+	_animInstance->JumpToSection(_curAttackSection + 1);
 }
 
 void AMyCharacter::AttackEnd(UAnimMontage* Montage, bool bInterrupted)
@@ -207,7 +130,7 @@ void AMyCharacter::Attack_Hit()
 		{
 			FDamageEvent damageEvent = FDamageEvent();
 
-			victim->TakeDamage(10, damageEvent, GetController(), this);
+			victim->TakeDamage(_statComponent->GetAtk(), damageEvent, GetController(), this);
 		}
 	}
 

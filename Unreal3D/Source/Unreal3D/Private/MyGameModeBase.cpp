@@ -8,7 +8,7 @@
 AMyGameModeBase::AMyGameModeBase()
 {
 	static ConstructorHelpers::FClassFinder<AMyCharacter>
-		pawn(TEXT("/Script/Engine.Blueprint'/Game/BluePrints/BP_MyCharacter.BP_MyCharacter_C'"));
+		pawn(TEXT("/Script/Engine.Blueprint'/Game/BluePrints/BP_MyPlayer.BP_MyPlayer_C'"));
 
 	if (pawn.Succeeded())
 	{

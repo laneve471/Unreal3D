@@ -1,0 +1,118 @@
+// Fill out your copyright notice in the Description page of Project Settings.
+
+
+#include "MyPlayer.h"
+#include "MyCharacter.h"
+
+#include "Kismet/KismetMathLibrary.h"
+#include "EnhancedInputComponent.h"
+#include "EnhancedInputSubsystems.h"
+#include "InputActionValue.h"
+
+#include "Components/CapsuleComponent.h"
+#include "GameFramework/SpringArmComponent.h"
+#include "Camera/CameraComponent.h"
+
+#include "MyAnimInstance.h"
+
+// Sets default values
+AMyPlayer::AMyPlayer()
+{
+ 	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+	PrimaryActorTick.bCanEverTick = true;
+
+	_springArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArm"));
+	_camera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
+
+	_springArm->SetupAttachment(GetCapsuleComponent());
+	_camera->SetupAttachment(_springArm);
+
+	_springArm->TargetArmLength = 500.0f;
+	_springArm->SetRelativeRotation(FRotator(-35.0f, 0.0f, 0.0f));
+}
+
+// Called when the game starts or when spawned
+void AMyPlayer::BeginPlay()
+{
+	Super::BeginPlay();
+	
+}
+
+// Called every frame
+void AMyPlayer::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+}
+
+// Called to bind functionality to input
+void AMyPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
+{
+	Super::SetupPlayerInputComponent(PlayerInputComponent);
+
+	UEnhancedInputComponent* enhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent);
+	if (enhancedInputComponent)
+	{
+		enhancedInputComponent->BindAction(_moveAction, ETriggerEvent::Triggered, this, &AMyPlayer::Move);
+		enhancedInputComponent->BindAction(_lookAction, ETriggerEvent::Triggered, this, &AMyPlayer::Look);
+		enhancedInputComponent->BindAction(_jumpAction, ETriggerEvent::Triggered, this, &AMyPlayer::MyJump);
+		enhancedInputComponent->BindAction(_attackAction, ETriggerEvent::Triggered, this, &AMyPlayer::Attack);
+	}
+}
+
+void AMyPlayer::Move(const FInputActionValue& value)
+{
+	if (_isAttack) return;
+
+	FVector2D moveVector = value.Get<FVector2D>();
+
+	if (Controller != nullptr)
+	{
+		if (moveVector.Length() > 0.01f)
+		{
+			FVector forward = GetActorForwardVector();
+			FVector right = GetActorRightVector();
+
+			_vertical = moveVector.Y;
+			_horizontal = moveVector.X;
+
+			AddMovementInput(forward, moveVector.Y);
+			AddMovementInput(right, moveVector.X);
+		}
+	}
+}
+
+void AMyPlayer::Look(const FInputActionValue& value)
+{
+	FVector2D lookAxisVector = value.Get<FVector2D>();
+
+	if (Controller != nullptr)
+	{
+		AddControllerYawInput(lookAxisVector.X);
+		AddControllerPitchInput(-lookAxisVector.Y);
+	}
+}
+
+void AMyPlayer::MyJump(const FInputActionValue& value)
+{
+	if (_isAttack) return;
+
+	bool isPress = value.Get<bool>();
+
+	if (isPress)
+	{
+		ACharacter::Jump();
+	}
+}
+
+void AMyPlayer::Attack(const FInputActionValue& value)
+{
+	if (_isAttack) return;
+
+	bool isPress = value.Get<bool>();
+
+	if (isPress)
+	{
+		Super::Attack();
+	}
+}
