@@ -5,6 +5,7 @@
 
 #include "MyAnimInstance.h"
 #include "MyStatComponent.h"
+#include "MyPlayer.h"
 
 // Sets default values
 AMyMonster::AMyMonster()
@@ -46,6 +47,12 @@ float AMyMonster::TakeDamage(float Damage, FDamageEvent const& DamageEvent, ACon
 		_curAttackSection = 4;
 		_animInstance->PlayAnimMontage();
 		_animInstance->JumpToSection(_curAttackSection);
+
+		auto player = Cast<AMyPlayer>(DamageCauser);
+		if (player)
+		{
+			player->AddExp(15);
+		}
 	}
 
 	return Damage;

@@ -14,6 +14,7 @@
 #include "Camera/CameraComponent.h"
 
 #include "MyAnimInstance.h"
+#include "MyStatComponent.h"
 
 // Sets default values
 AMyPlayer::AMyPlayer()
@@ -115,4 +116,9 @@ void AMyPlayer::Attack(const FInputActionValue& value)
 	{
 		Super::Attack();
 	}
+}
+
+void AMyPlayer::AddExp(int32 amount)
+{
+	_statComponent->AddCurExp(amount);
 }

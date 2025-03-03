@@ -21,12 +21,10 @@ void UMyStatComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
-	auto gameInstance = Cast<UMyGameInstance>(GetWorld()->GetGameInstance());
+	_gameInstance = Cast<UMyGameInstance>(GetWorld()->GetGameInstance());
+
 	_level = 1;
-	auto statInfo = gameInstance->GetStat_Level(_level);
-	_maxHp = statInfo.hp;
-	_curHp = statInfo.hp;
-	_atk = statInfo.atk;
+	LevelUp(_level);
 }
 
 
@@ -36,6 +34,16 @@ void UMyStatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
 	// ...
+}
+
+void UMyStatComponent::LevelUp(int32 level)
+{
+	auto statInfo = _gameInstance->GetStat_Level(level);
+	_maxHp = statInfo.hp;
+	_curHp = statInfo.hp;
+	_atk = statInfo.atk;
+	_curExp = 0;
+	_requiredExp = statInfo.exp;
 }
 
 int32 UMyStatComponent::AddCurHp(float amount)
@@ -58,5 +66,17 @@ int32 UMyStatComponent::AddCurHp(float amount)
 	UE_LOG(LogTemp, Warning, TEXT("Name : %s, HP: %d"), *actor->GetName(), _curHp);
 
 	return before - _curHp;
+}
+
+void UMyStatComponent::AddCurExp(float amount)
+{
+	_curExp += amount;
+
+	if (_curExp >= _requiredExp)
+	{
+		_level++;
+		LevelUp(_level);
+		UE_LOG(LogTemp, Log, TEXT("Level Up! Level : %d"), _level);
+	}
 }
 

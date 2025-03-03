@@ -16,6 +16,9 @@ struct FMyStatData : public FTableRowBase
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	int32 atk;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	int32 exp;
 };
 
 DECLARE_MULTICAST_DELEGATE_OneParam(FHpChanged, float);
@@ -41,13 +44,20 @@ public:
 	int32 GetAtk() { return _atk; }
 	float GetSpeed() { return _speed; }
 
+	void LevelUp(int32 level);
+
 	int32 AddCurHp(float amount);
+	void AddCurExp(float amount);
 
 	bool IsDead() { return _curHp <= 0; }
 
 	FHpChanged _hpChanged;
 
 private:
+	UPROPERTY()
+	class UMyGameInstance* _gameInstance;
+
+
 	UPROPERTY(VisibleAnywhere, Category = "Stat", meta = (AllowPrivateAccess = "true"))
 	int32 _level = 0;
 
@@ -59,6 +69,12 @@ private:
 
 	UPROPERTY(VisibleAnywhere, Category = "Stat", meta = (AllowPrivateAccess = "true"))
 	int32 _atk = 10;
+
+	UPROPERTY(VisibleAnywhere, Category = "Stat", meta = (AllowPrivateAccess = "true"))
+	int32 _curExp = 0;
+
+	UPROPERTY(VisibleAnywhere, Category = "Stat", meta = (AllowPrivateAccess = "true"))
+	int32 _requiredExp = 10;
 
 	UPROPERTY(VisibleAnywhere, Category = "Stat", meta = (AllowPrivateAccess = "true"))
 	float _speed = 10.0f;

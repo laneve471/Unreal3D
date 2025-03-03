@@ -36,6 +36,8 @@ public:
 	UFUNCTION()
 	void Attack(const struct FInputActionValue& value);
 
+	void AddExp(int32 amount);
+
 private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Camera", meta = (AllowPrivateAccess = "true"))
 	class UCameraComponent* _camera;
