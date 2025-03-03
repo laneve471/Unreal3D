@@ -9,6 +9,7 @@
 #include "InputActionValue.h"
 
 #include "Components/CapsuleComponent.h"
+#include "Components/WidgetComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Camera/CameraComponent.h"
 
@@ -16,6 +17,7 @@
 
 #include "MyAnimInstance.h"
 #include "MyStatComponent.h"
+#include "MyHpBar.h"
 
 // Sets default values
 AMyCharacter::AMyCharacter()
@@ -35,6 +37,16 @@ AMyCharacter::AMyCharacter()
 	_springArm->SetRelativeRotation(FRotator(-35.0f, 0.0f, 0.0f));
 
 	_statComponent = CreateDefaultSubobject<UMyStatComponent>(TEXT("Stat"));
+
+	_hpBarWidget = CreateDefaultSubobject<UWidgetComponent>(TEXT("HpBar"));
+	_hpBarWidget->SetupAttachment(GetMesh());
+	_hpBarWidget->SetWidgetSpace(EWidgetSpace::Screen);
+
+	static ConstructorHelpers::FClassFinder<UMyHpBar> hpBarClass(TEXT("/Script/UMGEditor.WidgetBlueprint'/Game/BluePrints/BP_MyHpBar.BP_MyHpBar_C'"));
+	if (hpBarClass.Succeeded())
+	{
+		_hpBarWidget->SetWidgetClass(hpBarClass.Class);
+	}
 }
 
 // Called when the game starts or when spawned
@@ -49,6 +61,12 @@ void AMyCharacter::BeginPlay()
 	_animInstance->OnMontageEnded.AddDynamic(this, &AMyCharacter::AttackEnd);
 	_animInstance->OnMontageBlendingOut.AddDynamic(this, &AMyCharacter::AttackEnd);
 	_animInstance->_hitEvent.AddDynamic(this, &AMyCharacter::Attack_Hit);
+
+	auto hpBar = Cast<UMyHpBar>(_hpBarWidget->GetWidget());
+	if (hpBar)
+	{
+		_statComponent->_hpChanged.AddUObject(hpBar, &UMyHpBar::SetHpBarValue);
+	}
 }
 
 // Called every frame
@@ -56,6 +74,21 @@ void AMyCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	auto playerController = GetWorld()->GetFirstPlayerController();
+	if (playerController)
+	{
+		FVector playerLocation = playerController->GetPawn()->GetActorLocation();
+		float distance = FVector::Distance(GetActorLocation(), playerLocation);
+
+		if (distance > 1000.0f)
+		{
+			_hpBarWidget->SetVisibility(false);
+		}
+		else
+		{
+			_hpBarWidget->SetVisibility(true);
+		}
+	}
 }
 
 // Called to bind functionality to input
