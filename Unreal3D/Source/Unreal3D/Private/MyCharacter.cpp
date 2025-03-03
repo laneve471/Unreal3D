@@ -12,6 +12,10 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "Camera/CameraComponent.h"
 
+#include "Engine/DamageEvents.h"
+
+#include "MyAnimInstance.h"
+
 // Sets default values
 AMyCharacter::AMyCharacter()
 {
@@ -34,7 +38,14 @@ AMyCharacter::AMyCharacter()
 void AMyCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
+	_animInstance = Cast<UMyAnimInstance>(GetMesh()->GetAnimInstance());
+	if (_animInstance == nullptr)
+		UE_LOG(LogTemp, Error, TEXT("AnimInstance did not exist."));
+
+	_animInstance->OnMontageEnded.AddDynamic(this, &AMyCharacter::AttackEnd);
+	_animInstance->OnMontageBlendingOut.AddDynamic(this, &AMyCharacter::AttackEnd);
+	_animInstance->_hitEvent.AddDynamic(this, &AMyCharacter::Attack_Hit);
 }
 
 // Called every frame
@@ -55,11 +66,14 @@ void AMyCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
 		enhancedInputComponent->BindAction(_moveAction, ETriggerEvent::Triggered, this, &AMyCharacter::Move);
 		enhancedInputComponent->BindAction(_lookAction, ETriggerEvent::Triggered, this, &AMyCharacter::Look);
 		enhancedInputComponent->BindAction(_jumpAction, ETriggerEvent::Triggered, this, &AMyCharacter::MyJump);
+		enhancedInputComponent->BindAction(_attackAction, ETriggerEvent::Triggered, this, &AMyCharacter::Attack);
 	}
 }
 
 void AMyCharacter::Move(const FInputActionValue& value)
 {
+	if (_isAttack) return;
+
 	FVector2D moveVector = value.Get<FVector2D>();
 
 	if (Controller != nullptr)
@@ -91,11 +105,77 @@ void AMyCharacter::Look(const FInputActionValue& value)
 
 void AMyCharacter::MyJump(const FInputActionValue& value)
 {
+	if (_isAttack) return;
+
 	bool isPress = value.Get<bool>();
 
 	if (isPress)
 	{
 		ACharacter::Jump();
+	}
+}
+
+void AMyCharacter::Attack(const FInputActionValue& value)
+{
+	if (_isAttack) return;
+
+	bool isPress = value.Get<bool>();
+
+	if (isPress)
+	{
+		_isAttack = true;
+
+		_curAttackSection = (_curAttackSection + 1) % 3;
+		_animInstance->PlayAnimMontage();
+		_animInstance->JumpToSection(_curAttackSection + 1);
+	}
+}
+
+void AMyCharacter::AttackEnd(UAnimMontage* Montage, bool bInterrupted)
+{
+	_isAttack = false;
+}
+
+void AMyCharacter::Attack_Hit()
+{
+	FHitResult hitResult;
+	FCollisionQueryParams params(NAME_None, false, this);
+
+	float attackRange = 500.0f;
+	float attackRadius = 100.0f;
+
+	FVector forward = GetActorForwardVector();
+	FQuat quat = FQuat::FindBetweenVectors(FVector(0, 0, 1), forward);
+
+	FVector center = GetActorLocation() + forward * attackRange * 0.5f;
+
+	bool bResult = GetWorld()->SweepSingleByChannel
+	(
+		OUT hitResult,
+		center,
+		center,
+		quat,
+		ECC_GameTraceChannel2,
+		FCollisionShape::MakeCapsule(attackRadius, attackRange * 0.5f),
+		params
+	);
+
+	FColor drawColor = FColor::Green;
+
+	if (bResult && hitResult.GetActor()->IsValidLowLevel())
+	{
+		drawColor = FColor::Red;
+		auto victim = Cast<AMyCharacter>(hitResult.GetActor());
+
+		if (victim)
+		{
+			FDamageEvent damageEvent = FDamageEvent();
+
+			victim->TakeDamage(10, damageEvent, GetController(), this);
+		}
+
+		DrawDebugCapsule(GetWorld(), center,
+			attackRange * 0.5f, attackRadius, quat, drawColor, false, 1.0f);
 	}
 }
 
