@@ -15,6 +15,7 @@
 #include "Engine/DamageEvents.h"
 
 #include "MyAnimInstance.h"
+#include "MyStatComponent.h"
 
 // Sets default values
 AMyCharacter::AMyCharacter()
@@ -32,6 +33,8 @@ AMyCharacter::AMyCharacter()
 
 	_springArm->TargetArmLength = 500.0f;
 	_springArm->SetRelativeRotation(FRotator(-35.0f, 0.0f, 0.0f));
+
+	_statComponent = CreateDefaultSubobject<UMyStatComponent>(TEXT("Stat"));
 }
 
 // Called when the game starts or when spawned
@@ -173,9 +176,26 @@ void AMyCharacter::Attack_Hit()
 
 			victim->TakeDamage(10, damageEvent, GetController(), this);
 		}
-
-		DrawDebugCapsule(GetWorld(), center,
-			attackRange * 0.5f, attackRadius, quat, drawColor, false, 1.0f);
 	}
+
+	DrawDebugCapsule(GetWorld(), center,
+		attackRange * 0.5f, attackRadius, quat, drawColor, false, 1.0f);
+}
+
+void AMyCharacter::AddHp(float Amount)
+{
+	_statComponent->AddCurHp(Amount);
+}
+
+void AMyCharacter::SubtractHp(float Amount)
+{
+	_statComponent->AddCurHp(-Amount);
+}
+
+float AMyCharacter::TakeDamage(float Damage, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
+{
+	_statComponent->AddCurHp(-Damage);
+
+	return Damage;
 }
 

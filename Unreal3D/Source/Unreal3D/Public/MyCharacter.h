@@ -69,6 +69,10 @@ private:
 	class UInputAction* _attackAction;
 
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Stat", meta = (AllowPrivateAccess = "true"))
+	class UMyStatComponent* _statComponent;
+
+
 	UPROPERTY()
 	class UMyAnimInstance* _animInstance;
 
