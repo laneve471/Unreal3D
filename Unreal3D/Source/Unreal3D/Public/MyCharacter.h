@@ -33,6 +33,9 @@ public:
 	UFUNCTION()
 	void MyJump(const struct FInputActionValue& value);
 
+	float My_Vertical() { return _vertical; }
+	float My_Horizontal() { return _horizontal; }
+
 private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Camera", meta = (AllowPrivateAccess = "true"))
 	class UCameraComponent* _camera;
@@ -48,4 +51,7 @@ private:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
 	class UInputAction* _jumpAction;
+
+	float _vertical = 0.0f;
+	float _horizontal = 0.0f;
 };

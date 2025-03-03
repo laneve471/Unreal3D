@@ -69,6 +69,9 @@ void AMyCharacter::Move(const FInputActionValue& value)
 			FVector forward = GetActorForwardVector();
 			FVector right = GetActorRightVector();
 
+			_vertical = moveVector.Y;
+			_horizontal = moveVector.X;
+
 			AddMovementInput(forward, moveVector.Y);
 			AddMovementInput(right, moveVector.X);
 		}
