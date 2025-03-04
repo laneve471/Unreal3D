@@ -32,6 +32,7 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Mesh")
 	UStaticMeshComponent* _mesh;
 
+public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Collision", meta = (AllowPrivateAccess = "true"))
 	class UCapsuleComponent* _collider;
 };

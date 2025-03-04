@@ -4,7 +4,6 @@
 #include "MyPlayer.h"
 #include "MyCharacter.h"
 
-#include "Kismet/KismetMathLibrary.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
@@ -15,11 +14,12 @@
 
 #include "MyAnimInstance.h"
 #include "MyStatComponent.h"
+#include "MyItem.h"
 
 // Sets default values
 AMyPlayer::AMyPlayer()
 {
- 	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+ 	
 	PrimaryActorTick.bCanEverTick = true;
 
 	_springArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArm"));
@@ -58,6 +58,8 @@ void AMyPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 		enhancedInputComponent->BindAction(_lookAction, ETriggerEvent::Triggered, this, &AMyPlayer::Look);
 		enhancedInputComponent->BindAction(_jumpAction, ETriggerEvent::Triggered, this, &AMyPlayer::MyJump);
 		enhancedInputComponent->BindAction(_attackAction, ETriggerEvent::Triggered, this, &AMyPlayer::Attack);
+		enhancedInputComponent->BindAction(_dropAction, ETriggerEvent::Triggered, this, &AMyPlayer::ItemDrop);
+		enhancedInputComponent->BindAction(_dropAction, ETriggerEvent::Completed, this, &AMyPlayer::ItemDropEnd);
 	}
 }
 
@@ -118,7 +120,49 @@ void AMyPlayer::Attack(const FInputActionValue& value)
 	}
 }
 
+void AMyPlayer::ItemDrop(const FInputActionValue& value)
+{
+	if (_isAttack) return;
+
+	bool isPress = value.Get<bool>();
+
+	if (isPress && !_isPressed)
+	{
+		_isPressed = true;
+
+		if (_items.Num() > 0)
+		{
+			AMyItem* dropItem = _items.Last();
+			_items.Remove(dropItem);
+			UE_LOG(LogTemp, Log, TEXT("Item count : %d"), _items.Num());
+
+			FVector playerLocation = GetActorLocation();
+
+			float dropRadius = 200.0f;
+			FVector randomOffset = FMath::VRand() * FMath::FRandRange(50.0f, dropRadius);
+			FVector dropLocation = playerLocation + randomOffset;
+			dropLocation.Z = 40.0f;
+
+			dropItem->SetActorLocation(dropLocation);
+			dropItem->SetActorHiddenInGame(false);
+			dropItem->SetActorEnableCollision(true);
+		}
+	}
+}
+
+void AMyPlayer::ItemDropEnd(const FInputActionValue& value)
+{
+	_isPressed = false;
+	UE_LOG(LogTemp, Log, TEXT("_isPressed : %d"), _isPressed);
+}
+
 void AMyPlayer::AddExp(int32 amount)
 {
 	_statComponent->AddCurExp(amount);
+}
+
+void AMyPlayer::AddItem(AMyItem* item)
+{
+	_items.Add(item);
+	UE_LOG(LogTemp, Log, TEXT("Item count : %d"), _items.Num());
 }

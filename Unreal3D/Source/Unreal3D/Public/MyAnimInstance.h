@@ -9,7 +9,8 @@
 /**
  * 
  */
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FAttackHitEvent);
+DECLARE_MULTICAST_DELEGATE(AttackHitEvent);
+DECLARE_MULTICAST_DELEGATE(DeadEvent);
 
 UCLASS()
 class UNREAL3D_API UMyAnimInstance : public UAnimInstance
@@ -26,15 +27,20 @@ public:
 
 	UFUNCTION()
 	void AnimNotify_Attack_Hit();
+	UFUNCTION()
+	void AnimNotify_Dead();
 
 	void JumpToSection(int32 sectionIndex);
 
-	UPROPERTY()
-	FAttackHitEvent _hitEvent;
+	AttackHitEvent _hitEvent;
+	DeadEvent _deadEvent;
 
 private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Pawn", meta = (AllowPrivateAccess = "true"))
 	bool _isFalling = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "AnimMontage", meta = (AllowPrivateAccess = "true"))
+	bool _isDead = false;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Pawn", meta = (AllowPrivateAccess = "true"))
 	float _speed = 0.0f;

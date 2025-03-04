@@ -30,13 +30,16 @@ public:
 
 	UFUNCTION()
 	void AttackEnd(class UAnimMontage* Montage, bool bInterrupted);
-	UFUNCTION()
+	
 	void Attack_Hit();
+	void DeadEvent();
 
 	void AddHp(float Amount);
 	void SubtractHp(float Amount);
 
 	virtual float TakeDamage(float Damage, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
+
+	bool IsDead();
 
 	float My_Vertical() { return _vertical; }
 	float My_Horizontal() { return _horizontal; }
@@ -44,9 +47,6 @@ public:
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Stat", meta = (AllowPrivateAccess = "true"))
 	class UMyStatComponent* _statComponent;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
-	class UWidgetComponent* _hpBarWidget;
 
 	UPROPERTY()
 	class UMyAnimInstance* _animInstance;

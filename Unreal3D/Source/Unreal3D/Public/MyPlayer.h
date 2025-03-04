@@ -36,7 +36,14 @@ public:
 	UFUNCTION()
 	void Attack(const struct FInputActionValue& value);
 
+	UFUNCTION()
+	void ItemDrop(const struct FInputActionValue& value);
+	UFUNCTION()
+	void ItemDropEnd(const struct FInputActionValue& value);
+
+
 	void AddExp(int32 amount);
+	void AddItem(class AMyItem* item);
 
 private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Camera", meta = (AllowPrivateAccess = "true"))
@@ -57,4 +64,14 @@ private:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
 	class UInputAction* _attackAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
+	class UInputAction* _dropAction;
+
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Item", meta = (AllowPrivateAccess = "true"))
+	TArray<class AMyItem*> _items;
+
+
+	bool _isPressed = false;
 };

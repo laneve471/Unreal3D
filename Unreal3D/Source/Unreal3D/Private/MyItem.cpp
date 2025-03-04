@@ -3,7 +3,7 @@
 #include "MyItem.h"
 
 #include "Components/CapsuleComponent.h"
-#include "MyCharacter.h"
+#include "MyPlayer.h"
 #include "MyPlayerController.h"
 #include "Engine/DamageEvents.h"
 
@@ -44,14 +44,14 @@ void AMyItem::Tick(float DeltaTime)
 
 void AMyItem::OnMyCharacterOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromWeep, const FHitResult& SweepResult)
 {
-	AMyCharacter* character = Cast<AMyCharacter>(OtherActor);
-	auto player = Cast<AMyPlayerController>(character->GetController());
+	auto character = Cast<AMyPlayer>(OtherActor);
 
-	if (character && player)
+	if (character)
 	{
 		UE_LOG(LogTemp, Log, TEXT("%s"), *character->GetName());
 
 		character->AddHp(10);
+		character->AddItem(this);
 
 		SetActorHiddenInGame(true);
 		SetActorEnableCollision(false);
