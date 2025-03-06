@@ -63,7 +63,7 @@ int32 UMyStatComponent::AddCurHp(float amount)
 		_hpChanged.Broadcast(ratio);
 
 	auto actor = GetOwner();
-	UE_LOG(LogTemp, Warning, TEXT("Name : %s, HP: %d"), *actor->GetName(), _curHp);
+	//UE_LOG(LogTemp, Warning, TEXT("Name : %s, HP: %d"), *actor->GetName(), _curHp);
 
 	return before - _curHp;
 }

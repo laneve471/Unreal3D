@@ -6,6 +6,25 @@
 #include "GameFramework/Actor.h"
 #include "MyItem.generated.h"
 
+UENUM()
+enum class MyItemType
+{
+	NONE,
+	POTION
+};
+
+USTRUCT(BluePrintType)
+struct FMyItemInfo
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	int32 itemId = -1;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	MyItemType type = MyItemType::NONE;
+};
+
 UCLASS()
 class UNREAL3D_API AMyItem : public AActor
 {
@@ -26,14 +45,20 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 	UFUNCTION()
-	void OnMyCharacterOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromWeep, const FHitResult& SweepResult);
+	void OnOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromWeep, const FHitResult& SweepResult);
+
+	const FMyItemInfo& GetInfo() { return _itemInfo; }
+
+	bool IsVisible() { return _mesh->IsVisible(); }
 
 private:
 	UPROPERTY(EditAnywhere, Category = "Mesh")
 	UStaticMeshComponent* _mesh;
 
-public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Collision", meta = (AllowPrivateAccess = "true"))
 	class UCapsuleComponent* _collider;
+
+	UPROPERTY(EditAnywhere, Category = "ItemInfo")
+	FMyItemInfo _itemInfo;
 };
 
