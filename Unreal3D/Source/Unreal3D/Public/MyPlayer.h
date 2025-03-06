@@ -39,13 +39,15 @@ public:
 	void Attack(const struct FInputActionValue& value);
 
 	UFUNCTION()
-	void ItemDrop(const struct FInputActionValue& value);
+	void ItemDropByKey(const struct FInputActionValue& value);
 	UFUNCTION()
-	void ItemDropEnd(const struct FInputActionValue& value);
-
+	void ItemDropByClick();
+	UFUNCTION()
+	void InvenOnOff(const struct FInputActionValue& value);
 
 	void AddExp(int32 amount);
 	void AddItem(class AMyItem* item);
+	void DropItem(struct FMyItemInfo dropItem);
 
 private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Camera", meta = (AllowPrivateAccess = "true"))
@@ -70,13 +72,18 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
 	class UInputAction* _dropAction;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
+	class UInputAction* _invenAction;
+
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Item", meta = (AllowPrivateAccess = "true"))
 	class UUserWidget* _invenWidget;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Item", meta = (AllowPrivateAccess = "true"))
+	class UMyInvenUI* _invenUI;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Item", meta = (AllowPrivateAccess = "true"))
 	class UMyInvenComponent* _invenComponent;
 
-
-	bool _isPressed = false;
+	bool _isInvenOpen = false;
 };

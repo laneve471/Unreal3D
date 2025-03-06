@@ -9,9 +9,11 @@
 #include "InputActionValue.h"
 
 #include "Components/CapsuleComponent.h"
+#include "Components/Button.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Camera/CameraComponent.h"
 
+#include "MyPlayerController.h"
 #include "MyAnimInstance.h"
 #include "MyStatComponent.h"
 #include "MyItem.h"
@@ -48,11 +50,12 @@ void AMyPlayer::PostInitializeComponents()
 {
 	Super::PostInitializeComponents();
 
-	auto invenUI = Cast<UMyInvenUI>(_invenWidget);
-	if (invenUI)
+	_invenUI = Cast<UMyInvenUI>(_invenWidget);
+	if (_invenUI)
 	{
-		_invenComponent->itemAddEvent.AddUObject(invenUI, &UMyInvenUI::SetItem_Index);
-		_invenComponent->itemDropEvent.AddUObject(invenUI, &UMyInvenUI::SetItem_Index);
+		_invenComponent->itemAddEvent.AddUObject(_invenUI, &UMyInvenUI::SetItem_Index);
+		_invenComponent->itemDropEvent.AddUObject(_invenUI, &UMyInvenUI::SetItem_Index);
+		_invenUI->Drop->OnClicked.AddDynamic(this, &AMyPlayer::ItemDropByClick);
 	}
 }
 
@@ -61,10 +64,6 @@ void AMyPlayer::BeginPlay()
 {
 	Super::BeginPlay();
 
-	if (_invenWidget)
-	{
-		_invenWidget->AddToViewport();
-	}
 }
 
 // Called every frame
@@ -86,8 +85,8 @@ void AMyPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 		enhancedInputComponent->BindAction(_lookAction, ETriggerEvent::Triggered, this, &AMyPlayer::Look);
 		enhancedInputComponent->BindAction(_jumpAction, ETriggerEvent::Triggered, this, &AMyPlayer::MyJump);
 		enhancedInputComponent->BindAction(_attackAction, ETriggerEvent::Triggered, this, &AMyPlayer::Attack);
-		enhancedInputComponent->BindAction(_dropAction, ETriggerEvent::Triggered, this, &AMyPlayer::ItemDrop);
-		enhancedInputComponent->BindAction(_dropAction, ETriggerEvent::Completed, this, &AMyPlayer::ItemDropEnd);
+		enhancedInputComponent->BindAction(_dropAction, ETriggerEvent::Started, this, &AMyPlayer::ItemDropByKey);
+		enhancedInputComponent->BindAction(_invenAction, ETriggerEvent::Started, this, &AMyPlayer::InvenOnOff);
 	}
 }
 
@@ -148,41 +147,52 @@ void AMyPlayer::Attack(const FInputActionValue& value)
 	}
 }
 
-void AMyPlayer::ItemDrop(const FInputActionValue& value)
+void AMyPlayer::ItemDropByKey(const FInputActionValue& value)
 {
 	if (_isAttack) return;
 
 	bool isPress = value.Get<bool>();
 
-	if (isPress && !_isPressed)
+	if (isPress)
 	{
-		_isPressed = true;
-
 		auto dropItem = _invenComponent->DropItem();
-		if (dropItem.itemId == -1)
-			return;
-
-		auto ItemBPClass = LoadClass<AMyItem>(nullptr, TEXT("/Script/Engine.Blueprint'/Game/BluePrints/BP_MyItem.BP_MyItem_C'"));
-		if (ItemBPClass)
-		{
-			FVector playerLocation = GetActorLocation();
-
-			float dropRadius = 200.0f;
-			FVector randomOffset = FMath::VRand() * FMath::FRandRange(100.0f, dropRadius);
-			FVector dropLocation = playerLocation + randomOffset;
-			dropLocation.Z = 40.0f;
-
-			FActorSpawnParameters spawnParams;
-			spawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
-
-			GetWorld()->SpawnActor<AMyItem>(ItemBPClass, dropLocation, FRotator::ZeroRotator, spawnParams);
-		}
+		DropItem(dropItem);
 	}
 }
 
-void AMyPlayer::ItemDropEnd(const FInputActionValue& value)
+void AMyPlayer::ItemDropByClick()
 {
-	_isPressed = false;
+	int32 index = _invenUI->_curIndex;
+	if (index == -1)
+		return;
+
+	auto dropItem = _invenComponent->DropItem(index);
+	DropItem(dropItem);
+}
+
+void AMyPlayer::InvenOnOff(const FInputActionValue& value)
+{
+	bool isPress = value.Get<bool>();
+
+	if (isPress)
+	{
+		auto controller = Cast<AMyPlayerController>(GetController());
+
+		if (_isInvenOpen)
+		{
+			if (controller)
+				controller->HideUI();
+			_invenWidget->RemoveFromViewport();
+		}
+		else
+		{
+			if (controller)
+				controller->ShowUI();
+			_invenWidget->AddToViewport();
+		}
+
+		_isInvenOpen = !_isInvenOpen;
+	}
 }
 
 void AMyPlayer::AddExp(int32 amount)
@@ -202,5 +212,27 @@ void AMyPlayer::AddItem(AMyItem* item)
 
 		item->SetActorHiddenInGame(true);
 		item->SetActorEnableCollision(false);
+	}
+}
+
+void AMyPlayer::DropItem(FMyItemInfo dropItem)
+{
+	if (dropItem.itemId == -1 && dropItem.type == MyItemType::NONE)
+		return;
+
+	auto ItemBPClass = LoadClass<AMyItem>(nullptr, TEXT("/Script/Engine.Blueprint'/Game/BluePrints/BP_MyItem.BP_MyItem_C'"));
+	if (ItemBPClass)
+	{
+		FVector playerLocation = GetActorLocation();
+
+		float dropRadius = 200.0f;
+		FVector randomOffset = FMath::VRand() * FMath::FRandRange(100.0f, dropRadius);
+		FVector dropLocation = playerLocation + randomOffset;
+		dropLocation.Z = 40.0f;
+
+		FActorSpawnParameters spawnParams;
+		spawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+
+		GetWorld()->SpawnActor<AMyItem>(ItemBPClass, dropLocation, FRotator::ZeroRotator, spawnParams);
 	}
 }

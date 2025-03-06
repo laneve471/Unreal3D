@@ -72,7 +72,7 @@ FMyItemInfo UMyInvenComponent::DropItem()
 	if (target == INDEX_NONE)
 		return temp;
 
-	FMyItemInfo oldItemInfo = _items[target];
+	FMyItemInfo dropItemInfo = _items[target];
 	_items[target] = temp;
 
 	if (itemDropEvent.IsBound())
@@ -80,11 +80,24 @@ FMyItemInfo UMyInvenComponent::DropItem()
 
 	_itemCount--;
 
-	return oldItemInfo;
+	return dropItemInfo;
 }
 
 FMyItemInfo UMyInvenComponent::DropItem(int32 index)
 {
-	return FMyItemInfo();
+	FMyItemInfo dropItemInfo = _items[index];
+	FMyItemInfo temp;
+
+	if (dropItemInfo.itemId == temp.itemId && dropItemInfo.type == temp.type)
+		return temp;
+
+	_items[index] = temp;
+
+	if (itemDropEvent.IsBound())
+		itemDropEvent.Broadcast(index, temp);
+
+	_itemCount--;
+
+	return dropItemInfo;
 }
 
