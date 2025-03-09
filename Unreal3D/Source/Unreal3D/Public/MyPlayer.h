@@ -47,7 +47,7 @@ public:
 
 	void AddExp(int32 amount);
 	void AddItem(class AMyItem* item);
-	void DropItem(struct FMyItemInfo dropItem);
+	void DropItem(AMyItem* item);
 
 private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Camera", meta = (AllowPrivateAccess = "true"))
@@ -78,9 +78,6 @@ private:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Item", meta = (AllowPrivateAccess = "true"))
 	class UUserWidget* _invenWidget;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Item", meta = (AllowPrivateAccess = "true"))
-	class UMyInvenUI* _invenUI;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Item", meta = (AllowPrivateAccess = "true"))
 	class UMyInvenComponent* _invenComponent;

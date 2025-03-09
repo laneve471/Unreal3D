@@ -18,8 +18,13 @@ public:
 	UFUNCTION()
 	void SetCurIndex();
 
+	void ShowToolTip();
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	class UMyInvenUI* _invenUI;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	class UMyToolTip* _toolTip;
 
 	int32 _buttonIndex;
 };

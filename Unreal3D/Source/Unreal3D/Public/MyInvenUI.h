@@ -30,6 +30,14 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TArray<class UImage*> _slotImages;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TArray<class UMyInvenButton*> _buttons;
+
+
+	UPROPERTY()
+	class UMyInvenComponent* _invenComponent;
+
+
 	int32 _curIndex = -1;
 
 private:

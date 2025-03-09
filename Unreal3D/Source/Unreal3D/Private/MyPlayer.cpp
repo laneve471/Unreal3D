@@ -50,12 +50,12 @@ void AMyPlayer::PostInitializeComponents()
 {
 	Super::PostInitializeComponents();
 
-	_invenUI = Cast<UMyInvenUI>(_invenWidget);
-	if (_invenUI)
+	auto invenUI = Cast<UMyInvenUI>(_invenWidget);
+	if (invenUI)
 	{
-		_invenComponent->itemAddEvent.AddUObject(_invenUI, &UMyInvenUI::SetItem_Index);
-		_invenComponent->itemDropEvent.AddUObject(_invenUI, &UMyInvenUI::SetItem_Index);
-		_invenUI->Drop->OnClicked.AddDynamic(this, &AMyPlayer::ItemDropByClick);
+		_invenComponent->_itemAddDropEvent.AddUObject(invenUI, &UMyInvenUI::SetItem_Index);
+		invenUI->Drop->OnClicked.AddDynamic(this, &AMyPlayer::ItemDropByClick);
+		invenUI->_invenComponent = _invenComponent;
 	}
 }
 
@@ -162,9 +162,10 @@ void AMyPlayer::ItemDropByKey(const FInputActionValue& value)
 
 void AMyPlayer::ItemDropByClick()
 {
-	int32 index = _invenUI->_curIndex;
-	if (index == -1)
-		return;
+	int32 index = -1;
+	auto invenUI = Cast<UMyInvenUI>(_invenWidget);
+	if (invenUI)
+		index = invenUI->_curIndex;
 
 	auto dropItem = _invenComponent->DropItem(index);
 	DropItem(dropItem);
@@ -207,32 +208,26 @@ void AMyPlayer::AddItem(AMyItem* item)
 		if (_invenComponent->IsFull())
 			return;
 
-		auto info = item->GetInfo();
-		_invenComponent->AddItem(info);
+		_invenComponent->AddItem(item);
 
 		item->SetActorHiddenInGame(true);
 		item->SetActorEnableCollision(false);
 	}
 }
 
-void AMyPlayer::DropItem(FMyItemInfo dropItem)
+void AMyPlayer::DropItem(AMyItem* item)
 {
-	if (dropItem.itemId == -1 && dropItem.type == MyItemType::NONE)
+	if (item == nullptr)
 		return;
 
-	auto ItemBPClass = LoadClass<AMyItem>(nullptr, TEXT("/Script/Engine.Blueprint'/Game/BluePrints/BP_MyItem.BP_MyItem_C'"));
-	if (ItemBPClass)
-	{
-		FVector playerLocation = GetActorLocation();
+	FVector playerLocation = GetActorLocation();
 
-		float dropRadius = 200.0f;
-		FVector randomOffset = FMath::VRand() * FMath::FRandRange(100.0f, dropRadius);
-		FVector dropLocation = playerLocation + randomOffset;
-		dropLocation.Z = 40.0f;
+	float dropRadius = 200.0f;
+	FVector randomOffset = FMath::VRand() * FMath::FRandRange(100.0f, dropRadius);
+	FVector dropLocation = playerLocation + randomOffset;
+	dropLocation.Z = 40.0f;
 
-		FActorSpawnParameters spawnParams;
-		spawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
-
-		GetWorld()->SpawnActor<AMyItem>(ItemBPClass, dropLocation, FRotator::ZeroRotator, spawnParams);
-	}
+	item->SetActorLocation(dropLocation);
+	item->SetActorHiddenInGame(false);
+	item->SetActorEnableCollision(true);
 }

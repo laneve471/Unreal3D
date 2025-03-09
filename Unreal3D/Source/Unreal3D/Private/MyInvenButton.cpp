@@ -4,6 +4,8 @@
 #include "MyInvenButton.h"
 
 #include "MyInvenUI.h"
+#include "MyInvenComponent.h"
+#include "MyToolTip.h"
 
 void UMyInvenButton::SetCurIndex()
 {
@@ -11,4 +13,9 @@ void UMyInvenButton::SetCurIndex()
 		return;
 
 	_invenUI->_curIndex = _buttonIndex;
+}
+
+void UMyInvenButton::ShowToolTip()
+{
+	SetToolTip(_toolTip);
 }

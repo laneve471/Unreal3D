@@ -32,72 +32,76 @@ void UMyInvenComponent::TickComponent(float DeltaTime, ELevelTick TickType, FAct
 	// ...
 }
 
-void UMyInvenComponent::AddItem(FMyItemInfo itemInfo)
+FMyItemInfo UMyInvenComponent::GetItemInfo_Index(int32 index)
 {
-	FMyItemInfo temp;
-	auto target = _items.FindByPredicate([temp](FMyItemInfo info)->bool
-		{
-			if (info.itemId == temp.itemId && info.type == temp.type)
-				return true;
-			return false;
-		});
+	if (index < 0 || index >= _items.Num())
+		return FMyItemInfo();
 
-	if (target == nullptr)
-		return;
+	if (_items[index] == nullptr)
+		return FMyItemInfo();
 
-	*target = itemInfo;
-
-	int32 targetIndex = 0;
-	int64 temp1 = (int64)target;
-	int64 temp2 = (int64)(&_items[0]);
-	targetIndex = (temp1 - temp2) / sizeof(int64);
-
-	if(itemAddEvent.IsBound())
-		itemAddEvent.Broadcast(targetIndex, *target);
-
-	_itemCount++;
-	//UE_LOG(LogTemp, Error, TEXT("ID : %d"), itemInfo.itemId);
+	return _items[index]->GetInfo();
 }
 
-FMyItemInfo UMyInvenComponent::DropItem()
+void UMyInvenComponent::AddItem(AMyItem* item)
 {
-	FMyItemInfo temp;
-	auto target = _items.FindLastByPredicate([temp](FMyItemInfo info)->bool
+	auto target = _items.IndexOfByPredicate([](AMyItem* item)->bool
 		{
-			if (info.itemId != temp.itemId || info.type != temp.type)
-				return true;
-			return false;
+			return item == nullptr;
 		});
 
 	if (target == INDEX_NONE)
-		return temp;
+		return;
 
-	FMyItemInfo dropItemInfo = _items[target];
-	_items[target] = temp;
+	_items[target] = item;
 
-	if (itemDropEvent.IsBound())
-		itemDropEvent.Broadcast(target, temp);
+	if(_itemAddDropEvent.IsBound())
+		_itemAddDropEvent.Broadcast(target, item->GetInfo());
+}
 
-	_itemCount--;
+AMyItem* UMyInvenComponent::DropItem()
+{
+	auto target = _items.FindLastByPredicate([](AMyItem* item)->bool
+		{
+			return item != nullptr;
+		});
+
+	if (target == INDEX_NONE)
+		return nullptr;
+
+	AMyItem* dropItemInfo = _items[target];
+	_items[target] = nullptr;
+
+	if (_itemAddDropEvent.IsBound())
+		_itemAddDropEvent.Broadcast(target, FMyItemInfo());
 
 	return dropItemInfo;
 }
 
-FMyItemInfo UMyInvenComponent::DropItem(int32 index)
+AMyItem* UMyInvenComponent::DropItem(int32 index)
 {
-	FMyItemInfo dropItemInfo = _items[index];
-	FMyItemInfo temp;
+	if (index >= _items.Num() || index < 0)
+		return nullptr;
 
-	if (dropItemInfo.itemId == temp.itemId && dropItemInfo.type == temp.type)
-		return temp;
+	if (_items[index] == nullptr)
+		return nullptr;
 
-	_items[index] = temp;
+	AMyItem* dropItemInfo = _items[index];
+	_items[index] = nullptr;
 
-	if (itemDropEvent.IsBound())
-		itemDropEvent.Broadcast(index, temp);
-
-	_itemCount--;
+	if (_itemAddDropEvent.IsBound())
+		_itemAddDropEvent.Broadcast(index, FMyItemInfo());
 
 	return dropItemInfo;
+}
+
+bool UMyInvenComponent::IsFull()
+{
+	auto target = _items.IndexOfByPredicate([](AMyItem* item)->bool
+		{
+			return item == nullptr;
+		});
+
+	return target == INDEX_NONE;
 }
 
