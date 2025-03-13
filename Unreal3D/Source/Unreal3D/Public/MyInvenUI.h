@@ -41,7 +41,7 @@ public:
 	int32 _curIndex = -1;
 
 private:
-	UPROPERTY()
+	UPROPERTY(EditAnywhere, meta = (AllowPrivateAccess = "true"))
 	UTexture2D* _defaultTexture;
 
 	UPROPERTY()

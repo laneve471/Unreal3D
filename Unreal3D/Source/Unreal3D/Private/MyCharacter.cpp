@@ -68,13 +68,12 @@ void AMyCharacter::Attack_Hit()
 	FHitResult hitResult;
 	FCollisionQueryParams params(NAME_None, false, this);
 
-	float attackRange = 500.0f;
 	float attackRadius = 100.0f;
 
 	FVector forward = GetActorForwardVector();
 	FQuat quat = FQuat::FindBetweenVectors(FVector(0, 0, 1), forward);
 
-	FVector center = GetActorLocation() + forward * attackRange * 0.5f;
+	FVector center = GetActorLocation() + forward * _attackRange * 0.5f;
 
 	bool bResult = GetWorld()->SweepSingleByChannel
 	(
@@ -83,7 +82,7 @@ void AMyCharacter::Attack_Hit()
 		center,
 		quat,
 		ECC_GameTraceChannel2,
-		FCollisionShape::MakeCapsule(attackRadius, attackRange * 0.5f),
+		FCollisionShape::MakeCapsule(attackRadius, _attackRange * 0.5f),
 		params
 	);
 
@@ -103,13 +102,14 @@ void AMyCharacter::Attack_Hit()
 	}
 
 	DrawDebugCapsule(GetWorld(), center,
-		attackRange * 0.5f, attackRadius, quat, drawColor, false, 1.0f);
+		_attackRange * 0.5f, attackRadius, quat, drawColor, false, 1.0f);
 }
 
 void AMyCharacter::DeadEvent()
 {
 	SetActorHiddenInGame(true);
 	SetActorEnableCollision(false);
+	Controller->UnPossess();
 }
 
 void AMyCharacter::AddHp(float Amount)

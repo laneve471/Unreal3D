@@ -40,9 +40,11 @@ public:
 	virtual float TakeDamage(float Damage, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
 
 	bool IsDead();
+	bool IsAttack() { return _isAttack; }
 
 	float My_Vertical() { return _vertical; }
 	float My_Horizontal() { return _horizontal; }
+	float GetAttackRange() { return _attackRange; }
 
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Stat", meta = (AllowPrivateAccess = "true"))
@@ -59,4 +61,7 @@ protected:
 
 	float _vertical = 0.0f;
 	float _horizontal = 0.0f;
+
+	UPROPERTY(EditAnywhere)
+	float _attackRange = 300.f;
 };

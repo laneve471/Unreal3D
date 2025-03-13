@@ -45,8 +45,11 @@ void AMyItem::Tick(float DeltaTime)
 void AMyItem::OnOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromWeep, const FHitResult& SweepResult)
 {
 	auto character = Cast<AMyPlayer>(OtherActor);
+	if (character == nullptr)
+		return;
 
-	if (character)
+	auto player = Cast<AMyPlayerController>(character->GetController());
+	if (character && player)
 	{
 		//UE_LOG(LogTemp, Log, TEXT("%s"), *character->GetName());
 

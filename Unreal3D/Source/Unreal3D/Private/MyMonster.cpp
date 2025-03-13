@@ -19,12 +19,6 @@ AMyMonster::AMyMonster()
 	_hpBarWidget = CreateDefaultSubobject<UWidgetComponent>(TEXT("HpBar"));
 	_hpBarWidget->SetupAttachment(GetMesh());
 	_hpBarWidget->SetWidgetSpace(EWidgetSpace::Screen);
-
-	static ConstructorHelpers::FClassFinder<UMyHpBar> hpBarClass(TEXT("/Script/UMGEditor.WidgetBlueprint'/Game/BluePrints/BP_MyHpBar.BP_MyHpBar_C'"));
-	if (hpBarClass.Succeeded())
-	{
-		_hpBarWidget->SetWidgetClass(hpBarClass.Class);
-	}
 }
 
 // Called when the game starts or when spawned
@@ -47,13 +41,17 @@ void AMyMonster::Tick(float DeltaTime)
 	auto playerController = GetWorld()->GetFirstPlayerController();
 	if (playerController)
 	{
-		FVector playerLocation = playerController->GetPawn()->GetActorLocation();
-		float distance = FVector::Distance(GetActorLocation(), playerLocation);
+		auto playerCameraManager = playerController->PlayerCameraManager;
+		if (playerCameraManager)
+		{
+			FVector cameraLocation = playerCameraManager->GetCameraLocation();
+			float distance = FVector::Distance(GetActorLocation(), cameraLocation);
 
-		if (distance > 1000.0f)
-			_hpBarWidget->SetVisibility(false);
-		else
-			_hpBarWidget->SetVisibility(true);
+			if (distance > 1000.0f)
+				_hpBarWidget->SetVisibility(false);
+			else
+				_hpBarWidget->SetVisibility(true);
+		}
 	}
 }
 
@@ -78,5 +76,16 @@ float AMyMonster::TakeDamage(float Damage, FDamageEvent const& DamageEvent, ACon
 	}
 
 	return Damage;
+}
+
+void AMyMonster::Attack_AI()
+{
+	if (_isAttack) return;
+
+	_isAttack = true;
+
+	_curAttackSection = (_curAttackSection + 1) % 3;
+	_animInstance->PlayAnimMontage();
+	_animInstance->JumpToSection(_curAttackSection + 1);
 }
 
